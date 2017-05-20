@@ -2,9 +2,11 @@ var events = require('events');
 var sinon = require('sinon');
 var _AWS = require('aws-sdk');
 var traverse = require('traverse');
+var mapped_services = [];
 
 module.exports = _AWS;
 module.exports.stub = stubMethod;
+module.exports.restore = restoreAll;
 
 /**
  * Replaces a single AWS service method with a stub.
@@ -19,6 +21,7 @@ module.exports.stub = stubMethod;
  * @returns {object} stub - [a sinon stub](http://sinonjs.org/docs/#stubs).
  */
 function stubMethod(service, method, replacement) {
+  if (!(service in mapped_services)) mapped_services.push(service);
   if (!isStubbed(service)) stubService(service);
   if (!replacement) return sinon.stub(getService(service).prototype, method);
 
@@ -71,4 +74,11 @@ function stubResponse() {
   var stubbed = sinon.createStubInstance(_AWS.Response);
   for (var method in req.__proto__) delete stubbed[method];
   return Object.assign(req, stubbed);
+}
+
+function restoreAll() {
+  for (let s in mapped_services) {
+    _AWS[mapped_services[s]].restore();
+    mapped_services.splice(s, 1);
+  }
 }
