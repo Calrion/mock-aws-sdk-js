@@ -1,10 +1,11 @@
 var events = require('events');
-var sinon = require('sinon');
+var sinon = require('sinon').sandbox.create();
 var _AWS = require('aws-sdk');
 var traverse = require('traverse');
 
 module.exports = _AWS;
 module.exports.stub = stubMethod;
+module.exports.restore = restoreAll;
 
 /**
  * Replaces a single AWS service method with a stub.
@@ -27,6 +28,10 @@ function stubMethod(service, method, replacement) {
     replacement.call(_this, params, callback);
     return _this.request;
   });
+}
+
+function restoreAll() {
+  return sinon.restore();
 }
 
 function isStubbed(service) {
@@ -61,14 +66,14 @@ function stubService(service) {
 
 function stubRequest() {
   var req = new events.EventEmitter();
-  var stubbed = sinon.createStubInstance(_AWS.Request);
+  var stubbed = sinon.stub(Object.create(_AWS.Request.prototype));
   for (var method in req.__proto__) delete stubbed[method];
   return Object.assign(req, stubbed);
 }
 
 function stubResponse() {
   var req = new events.EventEmitter();
-  var stubbed = sinon.createStubInstance(_AWS.Response);
+  var stubbed = sinon.stub(Object.create(_AWS.Response.prototype));
   for (var method in req.__proto__) delete stubbed[method];
   return Object.assign(req, stubbed);
 }

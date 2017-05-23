@@ -234,6 +234,17 @@ test('[multipleMethods] replacement function', function(assert) {
   });
 });
 
+test('[multipleMethods] restore all', function(assert) {
+  var Original = AWS.S3;
+  AWS.stub('S3', 'putObject', function() {});
+  AWS.stub('S3', 'getObject', function() {});
+
+  assert.equal(AWS.S3 === Original, false, 'service is initially stubbed');
+  AWS.restore();
+  assert.ok(AWS.S3 === Original, 'service is restored');
+  assert.end();
+});
+
 test('[upload] methods inherited multiple times', function(assert) {
   var upload = AWS.stub('S3', 'upload', function(params, callback) {
     callback(null, data);
